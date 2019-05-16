@@ -7,8 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/morikuni/failure"
-
 	"github.com/morikuni/failure-example/simple-crud/service"
 	"golang.org/x/sync/errgroup"
 
@@ -32,35 +30,58 @@ func main() {
 		cancel()
 	}()
 
-	var (
-		dbReady         = make(chan struct{})
-		controllerReady = make(chan struct{})
-	)
-
-	eg, ctx := errgroup.WithContext(ctx)
-	eg.Go(func() error {
-		return failure.Wrap(db.Run(ctx, dbReady))
-	})
-	eg.Go(func() error {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-dbReady:
-		}
-
-		return failure.Wrap(c.Run(ctx, controllerReady))
-	})
-	eg.Go(func() error {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-controllerReady:
-			logger.Println("[INFO] controller is ready")
-		}
+	ctx, wm := WithContext(ctx)
+	dbSig := wm.GoReady(ctx, db.Run)
+	controllerSig := wm.GoReady(ctx, c.Run, dbSig)
+	wm.Go(ctx, func(ctx context.Context) error {
+		logger.Println("[INFO] controller is ready")
 		return nil
-	})
+	}, controllerSig)
 
-	if err := eg.Wait(); err != nil {
+	if err := wm.Wait(); err != nil {
 		logger.Printf("[ERROR] %v\n", err)
 	}
+}
+
+type ReadySignal = <-chan struct{}
+
+type WorkerManager struct {
+	eg errgroup.Group
+}
+
+func WithContext(ctx context.Context) (context.Context, *WorkerManager) {
+	eg, ctx := errgroup.WithContext(ctx)
+	return ctx, &WorkerManager{*eg}
+}
+
+func (wm *WorkerManager) GoReady(ctx context.Context, worker func(ctx context.Context, ready chan<- struct{}) error, wait ...ReadySignal) ReadySignal {
+	c := make(chan struct{})
+	wm.eg.Go(func() error {
+		for _, w := range wait {
+			select {
+			case <-w:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+		return worker(ctx, c)
+	})
+	return c
+}
+
+func (wm *WorkerManager) Go(ctx context.Context, worker func(ctx context.Context) error, wait ...ReadySignal) {
+	wm.eg.Go(func() error {
+		for _, w := range wait {
+			select {
+			case <-w:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+		return worker(ctx)
+	})
+}
+
+func (wm *WorkerManager) Wait() error {
+	return wm.eg.Wait()
 }
