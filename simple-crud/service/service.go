@@ -2,10 +2,6 @@ package service
 
 import (
 	"context"
-	"io/ioutil"
-	"log"
-
-	"github.com/go-sql-driver/mysql"
 
 	"github.com/morikuni/failure"
 	"github.com/morikuni/failure-example/simple-crud/database"
@@ -103,8 +99,4 @@ func (s *service) Delete(ctx context.Context, key model.Key) error {
 	}
 
 	return nil
-}
-
-func init() {
-	mysql.SetLogger(log.New(ioutil.Discard, "", 0))
 }

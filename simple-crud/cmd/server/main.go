@@ -7,11 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/morikuni/failure-example/simple-crud/service"
-	"golang.org/x/sync/errgroup"
-
 	"github.com/morikuni/failure-example/simple-crud/controller"
 	"github.com/morikuni/failure-example/simple-crud/database"
+	"github.com/morikuni/failure-example/simple-crud/service"
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {

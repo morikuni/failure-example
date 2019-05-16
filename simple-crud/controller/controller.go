@@ -9,11 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/morikuni/failure-example/simple-crud/service"
-
 	"github.com/morikuni/failure"
 	"github.com/morikuni/failure-example/simple-crud/errors"
 	"github.com/morikuni/failure-example/simple-crud/model"
+	"github.com/morikuni/failure-example/simple-crud/service"
 )
 
 type Controller struct {

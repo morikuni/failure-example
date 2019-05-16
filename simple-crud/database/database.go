@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"io/ioutil"
+	"log"
 	"time"
 
-	"github.com/morikuni/failure-example/simple-crud/errors"
-
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/morikuni/failure"
+	"github.com/morikuni/failure-example/simple-crud/errors"
 	"github.com/morikuni/failure-example/simple-crud/model"
 )
 
@@ -81,6 +83,7 @@ func (db *MySQL) Run(ctx context.Context, ready chan<- struct{}) error {
 	}
 	db.conn = conn
 
+	// Wait until mysql become available
 	for {
 		select {
 		case <-ctx.Done():
@@ -116,4 +119,8 @@ CREATE TABLE IF NOT EXISTS kv (
 	<-ctx.Done()
 
 	return failure.Wrap(db.conn.Close())
+}
+
+func init() {
+	mysql.SetLogger(log.New(ioutil.Discard, "", 0))
 }
