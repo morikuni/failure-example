@@ -153,13 +153,17 @@ func (c *Controller) handleError(f func(http.ResponseWriter, *http.Request) erro
 			shouldPrintDetail = true
 		}
 
-		w.WriteHeader(httpStatus(code))
+		status := httpStatus(code)
+		if status%100 == 5 {
+			shouldPrintDetail = true
+		}
+		w.WriteHeader(status)
 
 		msg, ok := failure.MessageOf(err)
 		if ok {
 			io.WriteString(w, msg)
 		} else {
-			io.WriteString(w, http.StatusText(httpStatus(code)))
+			io.WriteString(w, http.StatusText(status))
 			shouldPrintDetail = true
 		}
 
@@ -177,6 +181,8 @@ func httpStatus(code failure.Code) int {
 		return http.StatusBadRequest
 	case errors.NotFound:
 		return http.StatusNotFound
+	case errors.AlreadyExist:
+		return http.StatusConflict
 	default:
 		return http.StatusInternalServerError
 	}
