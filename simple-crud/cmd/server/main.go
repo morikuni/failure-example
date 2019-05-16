@@ -33,8 +33,8 @@ func main() {
 	}()
 
 	var (
-		dbReady         = make(chan struct{}, 1)
-		controllerReady = make(chan struct{}, 1)
+		dbReady         = make(chan struct{})
+		controllerReady = make(chan struct{})
 	)
 
 	eg, ctx := errgroup.WithContext(ctx)
