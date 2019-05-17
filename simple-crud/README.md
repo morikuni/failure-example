@@ -2,6 +2,7 @@
 
 Example app for handling application errors with [github.com/morikuni/failure](https://github.com/morikuni/failure).
 The application is simple CRUD application which operate with key like a key-value store.
+Since it's just an exmple, there are race condition problem when multiple clients request for the same key.
 
 ## How to try?
 
