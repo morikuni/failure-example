@@ -147,12 +147,8 @@ func (c *Controller) handleError(f func(http.ResponseWriter, *http.Request) erro
 		}
 
 		var shouldPrintDetail bool
-		code, ok := failure.CodeOf(err)
-		if !ok {
-			shouldPrintDetail = true
-		}
 
-		status := httpStatus(code)
+		status := httpStatus(err)
 		if status%100 == 5 {
 			shouldPrintDetail = true
 		}
@@ -174,8 +170,8 @@ func (c *Controller) handleError(f func(http.ResponseWriter, *http.Request) erro
 	}
 }
 
-func httpStatus(code failure.Code) int {
-	switch code {
+func httpStatus(err error) int {
+	switch c, _ := failure.CodeOf(err); c {
 	case errors.InvalidArgument:
 		return http.StatusBadRequest
 	case errors.NotFound:
