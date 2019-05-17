@@ -25,25 +25,25 @@ type service struct {
 }
 
 func (s *service) Create(ctx context.Context, key model.Key, value model.Value) error {
-	context := func() failure.Context { return failure.Context{"key": string(key)} }
+	context := failure.Context{"key": string(key)}
 
 	_, err := s.db.Get(ctx, key)
 	if err == nil {
 		return failure.New(errors.AlreadyExist,
 			failure.Message("Specified key already exists. Use update for existing key."),
-			context(),
+			context,
 		)
 	}
 	if !failure.Is(err, errors.NotFound) {
 		return failure.Wrap(err,
-			context(),
+			context,
 		)
 	}
 
 	err = s.db.Put(ctx, key, value)
 	if err != nil {
 		return failure.Wrap(err,
-			context(),
+			context,
 		)
 	}
 
@@ -51,11 +51,11 @@ func (s *service) Create(ctx context.Context, key model.Key, value model.Value) 
 }
 
 func (s *service) Read(ctx context.Context, key model.Key) (model.Value, error) {
-	context := func() failure.Context { return failure.Context{"key": string(key)} }
+	context := failure.Context{"key": string(key)}
 
 	v, err := s.db.Get(ctx, key)
 	if err != nil {
-		ws := []failure.Wrapper{context()}
+		ws := []failure.Wrapper{context}
 		if failure.Is(err, errors.NotFound) {
 			ws = append(ws, failure.Message("Specified key does not exist."))
 		}
@@ -66,11 +66,11 @@ func (s *service) Read(ctx context.Context, key model.Key) (model.Value, error) 
 }
 
 func (s *service) Update(ctx context.Context, key model.Key, value model.Value) error {
-	context := func() failure.Context { return failure.Context{"key": string(key)} }
+	context := failure.Context{"key": string(key)}
 
 	_, err := s.db.Get(ctx, key)
 	if err != nil {
-		ws := []failure.Wrapper{context()}
+		ws := []failure.Wrapper{context}
 		if failure.Is(err, errors.NotFound) {
 			ws = append(ws, failure.Message("Specified key does not exist."))
 		}
@@ -80,7 +80,7 @@ func (s *service) Update(ctx context.Context, key model.Key, value model.Value) 
 	err = s.db.Put(ctx, key, value)
 	if err != nil {
 		return failure.Wrap(err,
-			context(),
+			context,
 		)
 	}
 
@@ -88,10 +88,10 @@ func (s *service) Update(ctx context.Context, key model.Key, value model.Value) 
 }
 
 func (s *service) Delete(ctx context.Context, key model.Key) error {
-	context := func() failure.Context { return failure.Context{"key": string(key)} }
+	context := failure.Context{"key": string(key)}
 
 	if err := s.db.Delete(ctx, key); err != nil {
-		ws := []failure.Wrapper{context()}
+		ws := []failure.Wrapper{context}
 		if failure.Is(err, errors.NotFound) {
 			ws = append(ws, failure.Message("Specified key does not exist."))
 		}
